@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: churn-predictor-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: churn-predictor
+  template:
+    metadata:
+      labels:
+        app: churn-predictor
+    spec:
+      containers:
+      - name: churn-predictor
+        image: divyanshu509/churn-predictor:v1
+        ports:
+        - containerPort: 8082
+        imagePullPolicy: Always

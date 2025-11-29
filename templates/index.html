@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Churn Predictor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f7fafc; }
+        .result-box {
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .high-risk { background-color: #fee2e2; border-left: 8px solid #dc2626; }
+        .low-risk { background-color: #d1fae5; border-left: 8px solid #10b981; }
+        .input-group label { text-transform: capitalize; }
+    </style>
+</head>
+<body class="p-4 md:p-10">
+
+    <div class="max-w-4xl mx-auto bg-white p-6 md:p-10 rounded-xl shadow-2xl">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-6 border-b pb-3">
+            Telecom Customer Churn Prediction
+        </h1>
+        <p class="text-gray-600 mb-8">
+            Enter the customer's current service details to predict their likelihood of churning. (Local Port: 8081)
+        </p>
+
+        <!-- Prediction Result Display -->
+        {% if result %}
+        <div class="result-box {% if result == 'HIGH RISK OF CHURN' %}high-risk{% else %}low-risk{% endif %} mb-10">
+            <h2 class="text-2xl font-bold mb-3 {% if result == 'HIGH RISK OF CHURN' %}text-red-700{% else %}text-green-700{% endif %}">
+                Prediction: {{ result }}
+            </h2>
+            <p class="text-lg font-medium text-gray-700">
+                Confidence: <strong>{{ confidence }}</strong>
+            </p>
+            <div class="mt-4 text-sm text-gray-600">
+                <p>— Probability of Churn: {{ churn_prob }}</p>
+                <p>— Probability of No Churn: {{ no_churn_prob }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Input Form -->
+        <form action="/predict" method="post" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- Loop through all features to create the input fields -->
+                {% for feature, defs in feature_defs.items() %}
+                <div class="input-group flex flex-col space-y-1">
+                    <label for="{{ feature }}" class="text-sm font-medium text-gray-700">
+                        {{ feature | replace('_', ' ') }}
+                        {% if defs.note %}
+                            <span class="text-xs text-blue-500">({{ defs.note }})</span>
+                        {% endif %}
+                    </label>
+                    
+                    {% if defs.type == 'select' %}
+                        <!-- Dropdown (Select) Fields -->
+                        <select id="{{ feature }}" name="{{ feature }}" 
+                                class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm" required>
+                            <option value="" disabled selected>Select {{ feature | replace('_', ' ') }}</option>
+                            {% for option in defs.options %}
+                                <option value="{{ option }}" {% if input_data and input_data[feature] == option|string %} selected {% endif %}>
+                                    {{ option }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    
+                    {% elif defs.type == 'number' %}
+                        <!-- Number Input Fields -->
+                        <input type="number" id="{{ feature }}" name="{{ feature }}" 
+                                class="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm" 
+                                min="{{ defs.min }}" max="{{ defs.max }}" step="{{ defs.step }}"
+                                value="{{ input_data[feature] if input_data else '' }}" required>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-6">
+                <button type="submit"
+                        class="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50 text-lg font-semibold transition duration-150 ease-in-out">
+                    Predict Churn
+                </button>
+            </div>
+        </form>
+
+        {% if error_detail %}
+        <div class="result-box high-risk mt-8">
+            <h2 class="text-2xl font-bold text-red-700 mb-2">Prediction Error!</h2>
+            <p class="text-sm text-gray-700">
+                The prediction failed due to a server problem. Please check the logs for details.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+</body>
+</html>

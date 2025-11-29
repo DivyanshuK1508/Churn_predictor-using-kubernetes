@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: churn-predictor-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: churn-predictor
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80          # External port
+      targetPort: 8082  # Flask/Gunicorn container port
+      nodePort: 30498   # Optional - Minikube can auto assign
